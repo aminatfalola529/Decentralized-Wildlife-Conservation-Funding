@@ -3,22 +3,22 @@ import { describe, it, beforeEach, expect, vi } from "vitest"
 // Mock the Clarity blockchain environment
 const mockClarity = {
   contracts: {
-    "progress-reporting": {
+    "project-registration": {
       functions: {
-        "submit-report": vi.fn(),
-        "update-report-status": vi.fn(),
-        "get-report": vi.fn(),
-        "get-project-report-summary": vi.fn(),
+        "register-project": vi.fn(),
+        "update-project-status": vi.fn(),
+        "get-project": vi.fn(),
+        "get-project-count": vi.fn(),
         "set-contract-admin": vi.fn(),
       },
       constants: {
-        "STATUS-PLANNED": 1,
-        "STATUS-IN-PROGRESS": 2,
+        "STATUS-PROPOSED": 1,
+        "STATUS-ACTIVE": 2,
         "STATUS-COMPLETED": 3,
-        "STATUS-DELAYED": 4,
+        "STATUS-SUSPENDED": 4,
         "ERR-NOT-AUTHORIZED": 100,
-        "ERR-REPORT-EXISTS": 101,
-        "ERR-REPORT-NOT-FOUND": 102,
+        "ERR-PROJECT-EXISTS": 101,
+        "ERR-PROJECT-NOT-FOUND": 102,
         "ERR-INVALID-STATUS": 103,
       },
     },
@@ -30,135 +30,98 @@ const mockClarity = {
 
 // Mock the contract calls
 const mockContractCall = (functionName, args, result) => {
-  mockClarity.contracts["progress-reporting"].functions[functionName].mockReturnValueOnce(result)
+  mockClarity.contracts["project-registration"].functions[functionName].mockReturnValueOnce(result)
 }
 
-describe("Progress Reporting Contract", () => {
+describe("Project Registration Contract", () => {
   beforeEach(() => {
     // Reset all mocks before each test
     vi.resetAllMocks()
   })
   
-  it("should submit a report successfully", () => {
-    // Create a mock buffer for media hash
-    const mediaHash = new Uint8Array(32).fill(1)
-    
-    // Mock successful report submission
+  it("should register a new project successfully", () => {
+    // Mock successful project registration
     mockContractCall(
-        "submit-report",
+        "register-project",
         [
-          1, // project-id
-          "Q1 2023 Progress",
-          "Detailed description of conservation activities during Q1 2023",
-          "Establish protected area boundaries",
-          2, // STATUS-IN-PROGRESS
-          mediaHash,
+          "Elephant Conservation Initiative",
+          "Kenya",
+          "African Elephant",
+          1672531200, // Jan 1, 2023
+          1704067200, // Jan 1, 2024
         ],
         { success: true, value: 1 },
     )
     
     // Call the contract function
-    const result = mockClarity.contracts["progress-reporting"].functions["submit-report"](
-        1,
-        "Q1 2023 Progress",
-        "Detailed description of conservation activities during Q1 2023",
-        "Establish protected area boundaries",
-        2,
-        mediaHash,
+    const result = mockClarity.contracts["project-registration"].functions["register-project"](
+        "Elephant Conservation Initiative",
+        "Kenya",
+        "African Elephant",
+        1672531200,
+        1704067200,
     )
     
     // Verify the result
     expect(result).toEqual({ success: true, value: 1 })
-    expect(mockClarity.contracts["progress-reporting"].functions["submit-report"]).toHaveBeenCalledTimes(1)
+    expect(mockClarity.contracts["project-registration"].functions["register-project"]).toHaveBeenCalledTimes(1)
   })
   
-  it("should update report status successfully", () => {
+  it("should update project status successfully", () => {
     // Mock successful status update
-    mockContractCall("update-report-status", [1, 3], { success: true, value: true })
+    mockContractCall("update-project-status", [1, 2], { success: true, value: true })
     
     // Call the contract function
-    const result = mockClarity.contracts["progress-reporting"].functions["update-report-status"](1, 3)
+    const result = mockClarity.contracts["project-registration"].functions["update-project-status"](1, 2)
     
     // Verify the result
     expect(result).toEqual({ success: true, value: true })
-    expect(mockClarity.contracts["progress-reporting"].functions["update-report-status"]).toHaveBeenCalledTimes(1)
+    expect(mockClarity.contracts["project-registration"].functions["update-project-status"]).toHaveBeenCalledTimes(1)
   })
   
-  it("should get report details successfully", () => {
-    // Create a mock buffer for media hash
-    const mediaHash = new Uint8Array(32).fill(1)
-    
-    // Mock report data
-    const reportData = {
-      "project-id": 1,
-      title: "Q1 2023 Progress",
-      description: "Detailed description of conservation activities during Q1 2023",
-      milestone: "Establish protected area boundaries",
+  it("should get project details successfully", () => {
+    // Mock project data
+    const projectData = {
+      name: "Elephant Conservation Initiative",
+      location: "Kenya",
+      "target-species": "African Elephant",
       status: 2,
-      "report-date": 100,
-      author: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
-      "media-hash": mediaHash,
+      "start-date": 1672531200,
+      "end-date": 1704067200,
+      coordinator: "ST1PQHQKV0RJXZFY1DGX8MNSNYVE3VGZJSRTPGZGM",
+      "registration-date": 100,
     }
     
-    // Mock successful report retrieval
-    mockContractCall("get-report", [1], { success: true, value: reportData })
+    // Mock successful project retrieval
+    mockContractCall("get-project", [1], { success: true, value: projectData })
     
     // Call the contract function
-    const result = mockClarity.contracts["progress-reporting"].functions["get-report"](1)
+    const result = mockClarity.contracts["project-registration"].functions["get-project"](1)
     
     // Verify the result
-    expect(result).toEqual({ success: true, value: reportData })
-    expect(mockClarity.contracts["progress-reporting"].functions["get-report"]).toHaveBeenCalledTimes(1)
+    expect(result).toEqual({ success: true, value: projectData })
+    expect(mockClarity.contracts["project-registration"].functions["get-project"]).toHaveBeenCalledTimes(1)
   })
   
-  it("should get project report summary successfully", () => {
-    // Mock summary data
-    const summaryData = {
-      "report-count": 5,
-      "last-report-date": 150,
-    }
-    
-    // Mock successful summary retrieval
-    mockContractCall("get-project-report-summary", [1], { success: true, value: summaryData })
-    
-    // Call the contract function
-    const result = mockClarity.contracts["progress-reporting"].functions["get-project-report-summary"](1)
-    
-    // Verify the result
-    expect(result).toEqual({ success: true, value: summaryData })
-    expect(mockClarity.contracts["progress-reporting"].functions["get-project-report-summary"]).toHaveBeenCalledTimes(1)
-  })
-  
-  it("should fail when invalid status is provided", () => {
-    // Create a mock buffer for media hash
-    const mediaHash = new Uint8Array(32).fill(1)
-    
-    // Mock invalid status error
+  it("should fail when unauthorized user tries to register a project", () => {
+    // Mock unauthorized error
     mockContractCall(
-        "submit-report",
-        [
-          1, // project-id
-          "Q1 2023 Progress",
-          "Detailed description of conservation activities during Q1 2023",
-          "Establish protected area boundaries",
-          10, // invalid status
-          mediaHash,
-        ],
-        { success: false, error: 103 },
+        "register-project",
+        ["Elephant Conservation Initiative", "Kenya", "African Elephant", 1672531200, 1704067200],
+        { success: false, error: 100 },
     )
     
     // Call the contract function
-    const result = mockClarity.contracts["progress-reporting"].functions["submit-report"](
-        1,
-        "Q1 2023 Progress",
-        "Detailed description of conservation activities during Q1 2023",
-        "Establish protected area boundaries",
-        10,
-        mediaHash,
+    const result = mockClarity.contracts["project-registration"].functions["register-project"](
+        "Elephant Conservation Initiative",
+        "Kenya",
+        "African Elephant",
+        1672531200,
+        1704067200,
     )
     
     // Verify the result
-    expect(result).toEqual({ success: false, error: 103 })
+    expect(result).toEqual({ success: false, error: 100 })
   })
 })
 
