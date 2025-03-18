@@ -13,3 +13,5 @@ P
  tests/progress-reporting.test.ts,2/9/29036b8d6e587ba3f68be466923ad9a51ce5726e
 Q
 !contracts/progress-reporting.clar,4/3/43f96d343b8b121f47fcbf8d7a9b27e7007d1ac6
+S
+#contracts/project-registration.clar,d/d/ddaa81591eb8279bb1fe885fc3243c9d6ea50dbc
